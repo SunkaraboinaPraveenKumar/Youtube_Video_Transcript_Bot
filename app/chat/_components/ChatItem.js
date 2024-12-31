@@ -1,0 +1,149 @@
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { coldarkDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { Copy } from 'lucide-react';
+
+function extractCodeFromString(message) {
+  if (message.includes('```')) {
+    const blocks = message.split('```');
+    return blocks.filter(block => block.trim() !== ''); // Filter out empty blocks
+  }
+  return [];
+}
+
+function isCodeBlock(str) {
+  return /[=\[\]{}#;/]/.test(str) || str.includes('//');
+}
+
+const parseContent = (content) => {
+  const regexBold = /\*\*(.*?)\*\*/g;
+  const regexList = /(\* .*?)(?=\* |$)/g;
+  const regexInlineCode = /`(.*?)`/g;
+
+  const elements = [];
+  const lines = content.split('\n');
+
+  lines.forEach((line, index) => {
+    let lineContent = [];
+    let lastIndex = 0;
+
+    line.replace(regexBold, (match, p1, offset) => {
+      if (offset > lastIndex) {
+        lineContent.push(line.slice(lastIndex, offset));
+      }
+      lineContent.push(<strong key={offset}>{p1}</strong>);
+      lastIndex = offset + match.length;
+    });
+
+    line.replace(regexList, (match, p1, offset) => {
+      if (offset > lastIndex) {
+        lineContent.push(line.slice(lastIndex, offset));
+      }
+      lineContent.push(<li key={offset}>{p1.slice(2)}</li>);
+      lastIndex = offset + match.length;
+    });
+
+    line.replace(regexInlineCode, (match, p1, offset) => {
+      if (offset > lastIndex) {
+        lineContent.push(line.slice(lastIndex, offset));
+      }
+      lineContent.push(<code key={offset}>{p1}</code>);
+      lastIndex = offset + match.length;
+    });
+
+    if (lastIndex < line.length) {
+      lineContent.push(line.slice(lastIndex));
+    }
+
+    elements.push(
+      <p key={index} style={{ margin: '0.5rem 0' }}>
+        {lineContent.length > 0 ? lineContent : line}
+      </p>
+    );
+  });
+
+  return elements;
+};
+
+const ChatItem = ({ content, role }) => {
+  const messageBlocks = extractCodeFromString(content);
+
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth <= 600);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const containerStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    borderRadius: '8px',
+    maxWidth: '100%',
+    overflowWrap: 'break-word',
+    wordBreak: 'break-word',
+  };
+
+  return (
+    <div style={containerStyle}>
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+        <div style={{ width: '100%', overflowX: 'auto' }}>
+          {messageBlocks.length === 0 ? (
+            <div style={{ fontSize: isSmallScreen ? '14px' : '17px', lineHeight: '1.5' }}>
+              {parseContent(content)}
+            </div>
+          ) : (
+            messageBlocks.map((block, index) =>
+              isCodeBlock(block) ? (
+                <div key={index} style={{ position: 'relative' }}>
+                  <SyntaxHighlighter
+                    style={coldarkDark}
+                    language="javascript"
+                    customStyle={{
+                      fontSize: isSmallScreen ? '12px' : '14px',
+                      whiteSpace: 'pre-wrap',
+                      overflowX: 'auto',
+                      padding: '8px',
+                      borderRadius: '8px',
+                      backgroundColor: '#2d2d2d',
+                    }}
+                    className='scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-800'
+                  >
+                    {block}
+                  </SyntaxHighlighter>
+                  {/* Add the copy button outside the SyntaxHighlighter */}
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(block);
+                      toast('Code Copied to clipboard!');
+                    }}
+                    className="absolute top-2 right-2 p-2 bg-gray-700 rounded-full hover:bg-gray-600 text-white"
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      right: '8px',
+                      zIndex: 10,
+                    }}
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div key={index} style={{ fontSize: isSmallScreen ? '14px' : '17px', lineHeight: '1.5' }}>
+                  {parseContent(block)}
+                </div>
+              )
+            )
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ChatItem;
