@@ -5,7 +5,7 @@ import { storage } from "@/config/firebase";
 import { getDownloadURL, ref, uploadBytesResumable, deleteObject } from "firebase/storage";
 import axios from "axios";
 import Image from "next/image";
-import { AudioLinesIcon, Mic, ChevronDown, ArrowDown, User, Bot, ArrowUp, Copy } from "lucide-react";
+import { AudioLinesIcon, Mic, ArrowDown, User, Bot, ArrowUp, Copy } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import ChatItem from "./ChatItem";
 import { useUser } from "@clerk/nextjs";
