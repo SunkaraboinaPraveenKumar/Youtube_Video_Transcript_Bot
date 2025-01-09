@@ -33,8 +33,8 @@ import { NextResponse } from 'next/server';
 export async function GET(req) {
     try {
         // Parse the request URL
-        const { searchParams } = new URL(req.url);
-        const videoUrl = searchParams.get('url');
+        const url = new URL(req.url);
+        const videoUrl = url.searchParams.get('url');
 
         if (!videoUrl) {
             return NextResponse.json(
