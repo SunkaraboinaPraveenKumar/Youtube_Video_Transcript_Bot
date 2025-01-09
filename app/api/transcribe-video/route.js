@@ -6,23 +6,38 @@ export async function GET(req) {
     const videoUrl = url.searchParams.get('url');
 
     if (!videoUrl) {
-        return NextResponse.json({ error: 'No URL provided' }, { status: 400 });
+        return new NextResponse(
+            JSON.stringify({ error: 'No URL provided' }),
+            { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } }
+        );
     }
 
     try {
         const videoId = videoUrl.split('v=')[1]?.split('&')[0];
         if (!videoId) {
-            return NextResponse.json({ error: 'Invalid YouTube URL' }, { status: 400 });
+            return new NextResponse(
+                JSON.stringify({ error: 'Invalid YouTube URL' }),
+                { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } }
+            );
         }
 
         const transcript = await YoutubeTranscript.fetchTranscript(videoId);
 
         if (!transcript || transcript.length === 0) {
-            return NextResponse.json({ error: 'No transcript available' }, { status: 500 });
+            return new NextResponse(
+                JSON.stringify({ error: 'No transcript available' }),
+                { status: 404, headers: { 'Access-Control-Allow-Origin': '*' } }
+            );
         }
 
-        return NextResponse.json({ result: transcript });
+        return new NextResponse(
+            JSON.stringify({ result: transcript }),
+            { status: 200, headers: { 'Access-Control-Allow-Origin': '*' } }
+        );
     } catch (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return new NextResponse(
+            JSON.stringify({ error: error.message }),
+            { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } }
+        );
     }
 }
