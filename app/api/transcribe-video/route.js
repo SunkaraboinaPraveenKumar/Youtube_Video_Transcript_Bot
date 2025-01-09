@@ -15,14 +15,18 @@ export async function GET(req) {
             return NextResponse.json({ error: 'Invalid YouTube URL' }, { status: 400 });
         }
 
+        // Fetch the transcript
         const transcript = await YoutubeTranscript.fetchTranscript(videoId);
 
         if (!transcript || transcript.length === 0) {
-            return NextResponse.json({ error: 'No transcript available' }, { status: 500 });
+            return NextResponse.json({ error: 'Transcript not available or disabled' }, { status: 404 });
         }
 
         return NextResponse.json({ result: transcript });
     } catch (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        if (error.message.includes('Transcript is disabled')) {
+            return NextResponse.json({ error: 'Transcript is disabled for this video' }, { status: 400 });
+        }
+        return NextResponse.json({ error: 'Internal server error: ' + error.message }, { status: 500 });
     }
 }
