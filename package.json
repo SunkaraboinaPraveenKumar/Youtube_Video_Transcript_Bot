@@ -54,7 +54,8 @@
     "tailwindcss-animate": "^1.0.7",
     "together-ai": "^0.10.0",
     "uuid4": "^2.0.3",
-    "youtube-transcript": "^1.2.1"
+    "youtube-transcript": "^1.2.1",
+    "youtubei.js": "^9.4.0"
   },
   "devDependencies": {
     "drizzle-kit": "^0.30.1",
