@@ -1,3 +1,4 @@
+"use client"
 import React, { useState, useEffect, useRef } from "react";
 import { chatSession } from "@/config/ChatModel";
 import { toast } from "sonner";
@@ -5,16 +6,17 @@ import { storage } from "@/config/firebase";
 import { getDownloadURL, ref, uploadBytesResumable, deleteObject } from "firebase/storage";
 import axios from "axios";
 import Image from "next/image";
-import { AudioLinesIcon, Mic, ArrowDown, User, Bot, ArrowUp, Copy } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
+import { ArrowDown, Copy } from "lucide-react";
 import ChatItem from "./ChatItem";
 import { useUser } from "@clerk/nextjs";
 import { ChatHistory } from "@/config/schema";
 import { db } from "@/config/postgresdb";
 import { eq } from "drizzle-orm";
+import ChatInput from "./ChatInput";
 
 function ChatInterface({ messages, setMessages }) {
-    const {user}=useUser();
+    const [webSearchResults, setWebSearchResults] = useState(null);
+    const { user } = useUser();
     const fetchChatHistory = async () => {
         if (!user) {
             return;
@@ -28,7 +30,7 @@ function ChatInterface({ messages, setMessages }) {
                 .from(ChatHistory)
                 .where(eq(ChatHistory.email, email))
 
-            if (chatHistory.length>0) {
+            if (chatHistory.length > 0) {
                 console.log("chatHistory", chatHistory[0].chatHistory);
                 setMessages(chatHistory[0].chatHistory);
             }
@@ -36,9 +38,9 @@ function ChatInterface({ messages, setMessages }) {
             console.error("Error fetching chat history:", error);
         }
     };
-    useEffect(()=>{
+    useEffect(() => {
         fetchChatHistory();
-    },[user]);
+    }, [user]);
     const [input, setInput] = useState("");
     const [isExtracting, setIsExtracting] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
@@ -85,13 +87,25 @@ function ChatInterface({ messages, setMessages }) {
                 2. Ensuring responses are conversational and encouraging further interaction.
                 3. If an image has been uploaded, incorporate the extracted text into the response only if relevant.
                 4. Avoid referencing "extracted image text" explicitly when it is unavailable ("N/A").
-                5. Maintain a friendly and professional tone throughout.
-                6. Always conclude responses clearly without abrupt or incomplete sentences.
-                7. Suggest follow-up questions or topics based on the user's query to keep the conversation flowing.
-    
+                5. Avoid referencing "Web Search Results" explicitly when it is unavailable "No web search results available.".
+                6. Maintain a friendly and professional tone throughout.
+                7. Always conclude responses clearly without abrupt or incomplete sentences.
+                8. Suggest follow-up questions or topics based on the user's query to keep the conversation flowing.
+
                 **Extracted Image Text:** "${extractedImageText || 'N/A'}"
                 **User Input:** "${input}"
-    
+                **Web Search Results:** "${webSearchResults?.results ? webSearchResults.results.map(result => `
+                    <div class="web-search-result">
+                        <a href="${result.url}" target="_blank">
+                            <h3>${result.title}</h3>
+                            <p>${result.description}</p>
+                            <img src="${result.icon}" alt="favicon" />
+                        </a>
+                    </div>
+                `).join('') : 'No web search results available.'}"
+
+                **Provide some top three urls at last in html clickable links**
+
                 Now, based on the above inputs, generate a thoughtful and engaging response.
             `;
 
@@ -264,7 +278,7 @@ function ChatInterface({ messages, setMessages }) {
 
                             {/* Message Content */}
                             <div className="flex-1 ml-3 mt-6 overflow-x-hidden ">
-                                <ChatItem content={msg.content} role={msg.role}/>
+                                <ChatItem content={msg.content} role={msg.role} />
                             </div>
                         </div>
 
@@ -293,56 +307,18 @@ function ChatInterface({ messages, setMessages }) {
                 </button>
             </div>
             {/* Message input area */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-800 shadow-md">
-                <div className="relative flex items-center space-x-2">
-                    <Textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Type your message..."
-                        className="flex-1 bg-gray-700 text-white 
-                        resize-none p-3 h-28 rounded-xl
-                        scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-800
-                        "
-                    />
-                    <div className="absolute left-3 bottom-3 space-x-2 flex">
-                        {/* Image preview in the top-left corner */}
-                        {imagePreview && (
-                            <div className="relative">
-                                <Image
-                                    src={imagePreview}
-                                    alt="Uploaded Preview"
-                                    width={25} 
-                                    height={25}
-                                    className="rounded-md"
-                                />
-                            </div>
-                        )}
-                        <label
-                            className="bg-blue-500 text-white p-2 rounded-full cursor-pointer">
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                                style={{ display: "none" }}
-                            />
-                            <Image src="/upload.png" width={25} height={25} alt="Upload" />
-                        </label>
-                        {isRecording ? (
-                            <button onClick={stopRecording} className="bg-red-500 text-white p-2 rounded-full">
-                                <AudioLinesIcon />
-                            </button>
-                        ) : (
-                            <button onClick={startRecording} className="bg-green-500 text-white p-2 rounded-full">
-                                <Mic />
-                            </button>
-                        )}
-                    </div>
-                    <button onClick={handleSendMessage} className="bg-blue-500 text-white p-2 rounded-full absolute right-3 bottom-3">
-                        <ArrowUp />
-                    </button>
-                </div>
-            </div>
+            <ChatInput
+                input={input}
+                setInput={setInput}
+                handleKeyDown={handleKeyDown}
+                handleImageUpload={handleImageUpload}
+                imagePreview={imagePreview}
+                isRecording={isRecording}
+                startRecording={startRecording}
+                stopRecording={stopRecording}
+                handleSendMessage={handleSendMessage}
+                setWebSearchResults={setWebSearchResults}
+            />
         </div>
     );
 }

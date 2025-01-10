@@ -32,7 +32,7 @@ function Dashboard() {
         {
           filesList?.length > 0 ? filesList.map((file, index) => (
             <div className='flex p-5 shadow-md rounded-md flex-col items-center justify-center border cursor-pointer hover:scale-105 transition-all' key={index}>
-              <Image src={"/pdf.png"} height={50} width={50} alt='pdf' />
+              <Image src={"/tube.png"} height={50} width={50} alt='pdf' />
               <h2 className='mt-3 font-medium text-lg'>{file?.fileName}</h2>
               {/* Buttons for navigating to workspace and workspace_bot */}
               <div className='mt-4 flex gap-4'>
