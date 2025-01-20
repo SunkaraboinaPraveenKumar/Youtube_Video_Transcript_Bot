@@ -81,33 +81,25 @@ function ChatInterface({ messages, setMessages }) {
         try {
             toast("AI is generating a response...");
             const fullPrompt = `
-                 You are a highly knowledgeable, interactive, and user-friendly chatbot designed to provide comprehensive and engaging responses to any question. Your goals include:
-    
+                You are a highly knowledgeable, interactive, and user-friendly chatbot designed to provide comprehensive and engaging responses to any question. Your goals include:
+
                 1. Interpreting and answering the user's query with detailed, accurate, and easy-to-understand information.
                 2. Ensuring responses are conversational and encouraging further interaction.
                 3. If an image has been uploaded, incorporate the extracted text into the response only if relevant.
                 4. Avoid referencing "extracted image text" explicitly when it is unavailable ("N/A").
-                5. Avoid referencing "Web Search Results" explicitly when it is unavailable "No web search results available.".
+                5. Avoid referencing "Web Search Results" explicitly when it is unavailable ("No web search results available.").
                 6. Maintain a friendly and professional tone throughout.
                 7. Always conclude responses clearly without abrupt or incomplete sentences.
-                8. Suggest follow-up questions or topics based on the user's query to keep the conversation flowing.
+                8. If there are relevant web search results and descriptions naturally within the response content, without creating a separate section. But at last give integrate their top 3 URLs as to refer these for further information.
 
                 **Extracted Image Text:** "${extractedImageText || 'N/A'}"
                 **User Input:** "${input}"
                 **Web Search Results:** "${webSearchResults?.results ? webSearchResults.results.map(result => `
-                    <div class="web-search-result">
-                        <a href="${result.url}" target="_blank">
-                            <h3>${result.title}</h3>
-                            <p>${result.description}</p>
-                            <img src="${result.icon}" alt="favicon" />
-                        </a>
-                    </div>
-                `).join('') : 'No web search results available.'}"
+                    ${result.title}: ${result.description} (${result.url})
+                `).join(' ') : 'No web search results available.'}"
 
-                **Provide some top three urls at last in html clickable links**
-
-                Now, based on the above inputs, generate a thoughtful and engaging response.
-            `;
+                Based on the above inputs, generate a thoughtful and engaging response.
+                `;
 
             const aiResult = await chatSession.sendMessage(fullPrompt);
             const cleanResponse = aiResult.response.text().trim();

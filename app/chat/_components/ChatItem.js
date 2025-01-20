@@ -17,6 +17,7 @@ function isCodeBlock(str) {
 }
 
 const parseContent = (content) => {
+  const regexLink = /(https?:\/\/[^\s]+)/g; // Regex for URLs
   const regexBold = /\*\*(.*?)\*\*/g;
   const regexList = /(\* .*?)(?=\* |$)/g;
   const regexInlineCode = /`(.*?)`/g;
@@ -28,6 +29,31 @@ const parseContent = (content) => {
     let lineContent = [];
     let lastIndex = 0;
 
+    // Highlight links and make them clickable
+    line.replace(regexLink, (match, offset) => {
+      if (offset > lastIndex) {
+        lineContent.push(line.slice(lastIndex, offset));
+      }
+      lineContent.push(
+        <a
+          href={match}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: '#b3d9ff',
+            textDecoration: 'none',
+            transition: 'color 0.3s ease',
+          }}
+          onMouseEnter={(e) => (e.target.style.color = '#b3d9ff')}
+          onMouseLeave={(e) => (e.target.style.color = '#b3d9ff')}
+        >
+          {match}
+        </a>
+      );
+      lastIndex = offset + match.length;
+    });
+
+    // Handle bold text
     line.replace(regexBold, (match, p1, offset) => {
       if (offset > lastIndex) {
         lineContent.push(line.slice(lastIndex, offset));
@@ -36,14 +62,7 @@ const parseContent = (content) => {
       lastIndex = offset + match.length;
     });
 
-    line.replace(regexList, (match, p1, offset) => {
-      if (offset > lastIndex) {
-        lineContent.push(line.slice(lastIndex, offset));
-      }
-      lineContent.push(<li key={offset}>{p1.slice(2)}</li>);
-      lastIndex = offset + match.length;
-    });
-
+    // Handle inline code
     line.replace(regexInlineCode, (match, p1, offset) => {
       if (offset > lastIndex) {
         lineContent.push(line.slice(lastIndex, offset));
