@@ -46,6 +46,7 @@ const parseContent = (content) => {
           }}
           onMouseEnter={(e) => (e.target.style.color = '#b3d9ff')}
           onMouseLeave={(e) => (e.target.style.color = '#b3d9ff')}
+          key={match} // Ensure the key is unique
         >
           {match}
         </a>
@@ -58,7 +59,7 @@ const parseContent = (content) => {
       if (offset > lastIndex) {
         lineContent.push(line.slice(lastIndex, offset));
       }
-      lineContent.push(<strong key={offset}>{p1}</strong>);
+      lineContent.push(<strong key={`bold-${offset}`}>{p1}</strong>); // Unique key for bold
       lastIndex = offset + match.length;
     });
 
@@ -67,7 +68,7 @@ const parseContent = (content) => {
       if (offset > lastIndex) {
         lineContent.push(line.slice(lastIndex, offset));
       }
-      lineContent.push(<code key={offset}>{p1}</code>);
+      lineContent.push(<code key={`code-${offset}`}>{p1}</code>); // Unique key for inline code
       lastIndex = offset + match.length;
     });
 
@@ -76,7 +77,7 @@ const parseContent = (content) => {
     }
 
     elements.push(
-      <p key={index} style={{ margin: '0.5rem 0' }}>
+      <p key={`line-${index}`} style={{ margin: '0.5rem 0' }}>
         {lineContent.length > 0 ? lineContent : line}
       </p>
     );
@@ -94,7 +95,7 @@ const ChatItem = ({ content, role }) => {
     const handleResize = () => {
       setIsSmallScreen(window.innerWidth <= 600);
     };
-    handleResize();
+    handleResize(); // Initial check
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -119,7 +120,7 @@ const ChatItem = ({ content, role }) => {
           ) : (
             messageBlocks.map((block, index) =>
               isCodeBlock(block) ? (
-                <div key={index} style={{ position: 'relative' }}>
+                <div key={`code-block-${index}`} style={{ position: 'relative' }}>
                   <SyntaxHighlighter
                     style={coldarkDark}
                     language="javascript"
@@ -135,7 +136,6 @@ const ChatItem = ({ content, role }) => {
                   >
                     {block}
                   </SyntaxHighlighter>
-                  {/* Add the copy button outside the SyntaxHighlighter */}
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(block);
@@ -153,7 +153,7 @@ const ChatItem = ({ content, role }) => {
                   </button>
                 </div>
               ) : (
-                <div key={index} style={{ fontSize: isSmallScreen ? '14px' : '17px', lineHeight: '1.5' }}>
+                <div key={`text-block-${index}`} style={{ fontSize: isSmallScreen ? '14px' : '17px', lineHeight: '1.5' }}>
                   {parseContent(block)}
                 </div>
               )
